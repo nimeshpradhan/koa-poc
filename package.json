@@ -1,0 +1,39 @@
+{
+  "name": "koa-poc",
+  "version": "1.0.0",
+  "description": "A sample project to demonstrate basic setup with Koa",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "start:dev": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nimeshpradhan/koa-poc.git"
+  },
+  "author": "nimesh",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nimeshpradhan/koa-poc/issues"
+  },
+  "homepage": "https://github.com/nimeshpradhan/koa-poc#readme",
+  "dependencies": {
+    "config": "^3.3.8",
+    "dotenv": "^16.0.3",
+    "http": "^0.0.1-security",
+    "https": "^1.0.0",
+    "koa": "^2.14.1",
+    "koa-body": "^6.0.1",
+    "koa-bodyparser": "^4.3.0",
+    "koa-router": "^12.0.0",
+    "massive": "^6.11.1",
+    "pg": "^8.8.0",
+    "pg-monitor": "^2.0.0",
+    "winston": "^3.8.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.20"
+  }
+}
