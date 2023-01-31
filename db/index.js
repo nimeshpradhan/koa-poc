@@ -1,86 +1,63 @@
-import monitor from "pg-monitor";
-import massive from "massive";
-import Instance from "./Instance.js";
+import { Sequelize } from "sequelize";
 import logger from "../logger/winston.js";
+import  User from "./models/users.js";
 
 class db {
   constructor() {
-    this._dbInstances = [];
+    this._dbInstances = null;
+    this._models = null;
   }
 
   async init(dbConfig) {
     try {
-      this._dbConfig = dbConfig;
-      if (this._dbConfig === null || this._dbConfig.length === 0 || Object.keys(this._dbConfig).length === 0) {
+      if (
+        dbConfig === null ||
+        dbConfig.length === 0 ||
+        Object.keys(dbConfig).length === 0
+      ) {
         return null;
       }
-      for (const key of Object.keys(this._dbConfig)) {
-        const dbConfig = this._dbConfig[key];
-        const loaderConfig = Object.assign({}, dbConfig.loaderConfig);
-        const driverConfig = Object.assign({}, dbConfig.driverConfig);
-        const connectionOptions = Object.assign({}, dbConfig.connectionOptions);
-        const db = await massive(
-          connectionOptions,
-          loaderConfig,
-          driverConfig
-        );
 
-        const dbInstance = new Instance(db, connectionOptions);
-        this._dbInstances.push(dbInstance);
+      this._dbInstances = this._dbInstances || {};
+      this._models = this._models || {};
 
-        logger.info(
-          `database instance added. tables: %s views: %s functions: %s`,
-          dbInstance.listTables(),
-          dbInstance.listViews(),
-          dbInstance.listFunctions()
+      for (const key of Object.keys(dbConfig)) {
+        const _dbConfig = dbConfig[key];
+        const connectionOptions = Object.assign(
+          {},
+          _dbConfig.connectionOptions
         );
-        if (dbConfig.enableMonitor === true) {
-          monitor.attach(dbInstance.driverConfig);
-        }
+        const db = new Sequelize(
+          connectionOptions.dialect,
+          connectionOptions.user,
+          connectionOptions.password,
+          {
+            host: connectionOptions.host,
+            port: connectionOptions.port,
+            dialect: _dbConfig.dialect,
+            logging: logger.info.bind(logger),
+            pool: {},
+          }
+        );
+        await db.authenticate();
+
+        this._dbInstances[key] = db;
+        this._models.users = User(Sequelize, db)
       }
-
       return this._dbInstances;
     } catch (e) {
-      this._dbInstances.length = 0;
-      this._dbConfig = null
+      this._dbInstances = null;
+      this._models = null;
       throw e;
     }
   }
 
-  getInstance(instanceName = null) {
-    if (instanceName === null) {
-      return (
-        this._dbInstances.find((_i) => _i.name === "default") ||
-        this._dbInstances[0]
-      );
-    }
-    const instance = this._dbInstances.find((_i) => _i.name === instanceName);
-    if (instance) {
-      return instance;
-    } else {
-      logger.warn(`no instance found`);
-      return null;
-    }
+  getInstances() {
+    return this._dbInstances;
   }
 
   models() {
-    let tables = {};
-    if (this._dbInstances) {
-      for (let dbInstance of this._dbInstances) {
-        const tablesNames = dbInstance.listTables();
-        tablesNames.forEach((name) => {
-          if (dbInstance.getConnectionOptions()?.schema != "public") {
-            tables[name.split(".")[1]] =
-              dbInstance[dbInstance.getConnectionOptions().schema][
-                name.split(".")[1]
-              ];
-          } else {
-            tables[name] = dbInstance[name];
-          }
-        });
-      }
-    }
-    return tables;
+    return this._models;
   }
 }
 

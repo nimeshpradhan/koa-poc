@@ -1,9 +1,9 @@
 import { createLogger, format, transports } from "winston";
-import config from 'config';
+import config from '../config/index.js';
 class Logger {
   constructor() {
     this.logger = null;
-    this.loggerConfig =  config.has('logger') ? config.get("logger") : null;
+    this.loggerConfig = config.get("logger");
     this.setLogger()
   }
 
