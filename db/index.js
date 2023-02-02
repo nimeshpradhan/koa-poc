@@ -1,6 +1,7 @@
 import { Sequelize } from "sequelize";
 import logger from "../logger/winston.js";
-import  User from "./models/users.js";
+import fs from "fs";
+import path from "path";
 
 class db {
   constructor() {
@@ -23,26 +24,34 @@ class db {
 
       for (const key of Object.keys(dbConfig)) {
         const _dbConfig = dbConfig[key];
-        const connectionOptions = Object.assign(
-          {},
-          _dbConfig.connectionOptions
-        );
         const db = new Sequelize(
-          connectionOptions.dialect,
-          connectionOptions.user,
-          connectionOptions.password,
+          _dbConfig.dialect,
+          _dbConfig.user,
+          _dbConfig.password,
           {
-            host: connectionOptions.host,
-            port: connectionOptions.port,
+            host: _dbConfig.host,
+            port: _dbConfig.port,
             dialect: _dbConfig.dialect,
             logging: logger.info.bind(logger),
-            pool: {},
+            pool: _dbConfig.pool,
           }
         );
         await db.authenticate();
 
         this._dbInstances[key] = db;
-        this._models.users = User(Sequelize, db)
+        const files = fs.readdirSync(
+          path.join(path.resolve(), "db", "models", key)
+        );
+        for (let file of files) {
+          const { default: Model } = await import(`./models/${key}/${file}`);
+          if (_dbConfig.schema != null) {
+            this._models[Model.name] = Model(Sequelize, db).schema(
+              _dbConfig.schema
+            );
+          } else {
+            this._models[Model.name] = Model(Sequelize, db);
+          }
+        }
       }
       return this._dbInstances;
     } catch (e) {
@@ -59,6 +68,7 @@ class db {
   models() {
     return this._models;
   }
+
 }
 
 export default new db();

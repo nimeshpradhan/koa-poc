@@ -5,12 +5,10 @@ const User = (DataTypes, sequelize) => sequelize.define(
     firstName: {
       type: DataTypes.STRING,
       allowNull: false,
-      field: "first_name",
     },
     lastName: {
       type: DataTypes.STRING,
       allowNull: false,
-      field: "last_name",
     },
     id: {
       type: DataTypes.BIGINT,
@@ -20,6 +18,8 @@ const User = (DataTypes, sequelize) => sequelize.define(
   },
   {
     tableName: "users",
+    timestamps: false,
+    underscored: true
   }
 );
 

@@ -1,6 +1,5 @@
 export default {
-    "logger": {
-      "level": "debug"
-    }
-  }
-  
+  logger: {
+    level: "debug",
+  },
+};
